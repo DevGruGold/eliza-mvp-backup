@@ -44,7 +44,7 @@ serve(async (req) => {
     } catch (error) {
       statusReport.components.database = {
         status: 'error',
-        error: error.message
+        error: (error as Error).message
       };
       statusReport.overall_status = 'degraded';
     }
@@ -87,7 +87,7 @@ serve(async (req) => {
     } catch (error) {
       statusReport.components.agents = {
         status: 'error',
-        error: error.message
+        error: (error as Error).message
       };
       statusReport.overall_status = 'degraded';
     }
@@ -131,7 +131,7 @@ serve(async (req) => {
     } catch (error) {
       statusReport.components.tasks = {
         status: 'error',
-        error: error.message
+        error: (error as Error).message
       };
       statusReport.overall_status = 'degraded';
     }
@@ -160,7 +160,7 @@ serve(async (req) => {
     } catch (error) {
       statusReport.components.mining = {
         status: 'error',
-        error: error.message
+        error: (error as Error).message
       };
     }
     
@@ -228,7 +228,7 @@ serve(async (req) => {
       } catch (error) {
         statusReport.components.render_service = {
           status: 'error',
-          error: error.message
+          error: (error as Error).message
         };
       }
     } else {
@@ -272,7 +272,7 @@ serve(async (req) => {
     } catch (error) {
       statusReport.components.activity_log = {
         status: 'error',
-        error: error.message
+        error: (error as Error).message
       };
     }
     

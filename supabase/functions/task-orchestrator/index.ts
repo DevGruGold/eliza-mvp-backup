@@ -229,7 +229,7 @@ serve(async (req) => {
           .eq('status', 'FAILED')
           .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
-        const agentStats = {};
+        const agentStats: Record<string, { completed: number; failed: number }> = {};
         for (const task of completedTasks || []) {
           if (!agentStats[task.assignee_agent_id]) {
             agentStats[task.assignee_agent_id] = { completed: 0, failed: 0 };
@@ -250,7 +250,7 @@ serve(async (req) => {
             total_completed: completedTasks?.length || 0,
             total_failed: failedTasks?.length || 0,
             agent_performance: agentStats,
-            success_rate: completedTasks?.length / (completedTasks?.length + failedTasks?.length || 1)
+            success_rate: (completedTasks?.length || 0) / ((completedTasks?.length || 0) + (failedTasks?.length || 0) || 1)
           }
         };
         break;

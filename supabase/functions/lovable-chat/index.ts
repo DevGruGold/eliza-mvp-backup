@@ -1833,7 +1833,7 @@ You are currently running INSIDE a Supabase Edge Function called "lovable-chat".
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error.message 
+        error: (error as Error).message 
       }),
       { 
         status: 500, 

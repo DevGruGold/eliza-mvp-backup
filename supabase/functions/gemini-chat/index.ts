@@ -374,7 +374,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const message = data.choices?.[0]?.message;
+    let message = data.choices?.[0]?.message;
 
     console.log("✅ Gemini response:", { 
       hasContent: !!message?.content,
@@ -407,15 +407,15 @@ serve(async (req) => {
         console.log(`🔧 Executing ${currentToolCalls.length} tool(s) in this step`);
         
         // Execute the tools
-        const toolResults = await executeToolCalls(
+        const toolResults = await executeToolCallsWithRetry(
           currentToolCalls,
           supabase,
-          executedToolSignatures,
+          OPENAI_API_KEY,
           conversationHistory
         );
         
         // Check if all tools were duplicates (circuit breaker)
-        const allDuplicates = toolResults.every(r => r.note?.includes("cached result"));
+        const allDuplicates = toolResults.every((r: any) => r.note?.includes("cached result"));
         if (allDuplicates) {
           consecutiveDuplicates++;
           console.warn(`⚠️ All tools were duplicates (${consecutiveDuplicates}/${MAX_CONSECUTIVE_DUPLICATES})`);
@@ -869,7 +869,7 @@ const executedToolSignatures = new Map<string, any>();
 async function executeToolCallsWithRetry(
   toolCalls: any[], 
   supabase: any, 
-  lovableApiKey: string,
+  openaiApiKey: string,
   conversationHistory: any[],
   maxRetries: number = 2
 ) {
@@ -942,7 +942,7 @@ Please analyze the error and fix the code. CRITICAL RULES:
             const fixResponse = await fetch("https://api.openai.com/v1/chat/completions", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${OPENAI_API_KEY}`,
+                Authorization: `Bearer ${openaiApiKey}`,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
@@ -1034,7 +1034,7 @@ Please analyze the error and fix the code. CRITICAL RULES:
         }
       } catch (error) {
         console.error('❌ Tool execution error:', error);
-        lastError = error.message;
+        lastError = (error as Error).message;
         
         if (retryCount >= maxRetries) {
           results.push({ success: false, error: lastError });

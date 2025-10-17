@@ -111,7 +111,7 @@ Here's what I think we should prioritize this week:
 `;
 
     // Add priorities based on recent activity
-    const priorities = generatePriorities(recentActivity, blockedTasks);
+    const priorities = generatePriorities(recentActivity || [], blockedTasks || []);
     discussionBody += priorities.map((p, i) => `${i + 1}. ${p}`).join('\n');
 
     discussionBody += `

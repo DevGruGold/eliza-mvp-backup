@@ -57,7 +57,7 @@ serve(async (req) => {
       total_last_hour: recentExecutions?.length || 0,
       successful: recentExecutions?.filter(e => e.exit_code === 0).length || 0,
       failed: recentExecutions?.filter(e => e.exit_code !== 0).length || 0,
-      success_rate: recentExecutions?.filter(e => e.exit_code === 0).length / (recentExecutions?.length || 1)
+      success_rate: (recentExecutions?.filter(e => e.exit_code === 0).length || 0) / (recentExecutions?.length || 1)
     };
 
     // Check recent activity
@@ -68,7 +68,7 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    const activityByType = {};
+    const activityByType: Record<string, number> = {};
     for (const activity of recentActivity || []) {
       activityByType[activity.activity_type] = (activityByType[activity.activity_type] || 0) + 1;
     }

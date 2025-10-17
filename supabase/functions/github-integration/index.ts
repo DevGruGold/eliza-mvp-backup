@@ -764,7 +764,7 @@ serve(async (req) => {
 
     // Handle special case where we manually created the result object
     let responseData;
-    if (result.json) {
+    if (typeof result.json === 'function') {
       responseData = await result.json();
     } else {
       responseData = result;
@@ -838,7 +838,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('GitHub Integration Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

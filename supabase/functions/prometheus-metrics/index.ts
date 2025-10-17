@@ -55,7 +55,7 @@ serve(async (req) => {
 
     metrics += formatPrometheusMetric('eliza_agents_total', agents?.length || 0, {}, 'Total number of agents');
     Object.entries(agentsByStatus).forEach(([status, count]) => {
-      metrics += formatPrometheusMetric('eliza_agents_by_status', count, { status }, 'Agents by status');
+      metrics += formatPrometheusMetric('eliza_agents_by_status', count as number, { status }, 'Agents by status');
     });
 
     // Task metrics
@@ -66,7 +66,7 @@ serve(async (req) => {
 
     metrics += formatPrometheusMetric('eliza_tasks_total', tasks?.length || 0, {}, 'Total number of tasks');
     Object.entries(tasksByStatus).forEach(([status, count]) => {
-      metrics += formatPrometheusMetric('eliza_tasks_by_status', count, { status }, 'Tasks by status');
+      metrics += formatPrometheusMetric('eliza_tasks_by_status', count as number, { status }, 'Tasks by status');
     });
 
     // Python execution metrics (last hour)
@@ -92,7 +92,7 @@ serve(async (req) => {
 
     metrics += formatPrometheusMetric('eliza_activities_total', activityLogs?.length || 0, { period: 'last_hour' }, 'Total activities in the last hour');
     Object.entries(activitiesByType).forEach(([type, count]) => {
-      metrics += formatPrometheusMetric('eliza_activities_by_type', count, { type, period: 'last_hour' }, 'Activities by type');
+      metrics += formatPrometheusMetric('eliza_activities_by_type', count as number, { type, period: 'last_hour' }, 'Activities by type');
     });
 
     // Conversation metrics
@@ -109,7 +109,7 @@ serve(async (req) => {
     }, {} as Record<string, number>) || {};
     
     Object.entries(entitiesByType).forEach(([type, count]) => {
-      metrics += formatPrometheusMetric('eliza_knowledge_entities_by_type', count, { type }, 'Knowledge entities by type');
+      metrics += formatPrometheusMetric('eliza_knowledge_entities_by_type', count as number, { type }, 'Knowledge entities by type');
     });
 
     // Health score metric
