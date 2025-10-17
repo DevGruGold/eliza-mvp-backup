@@ -13,7 +13,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translations = {
   en: {
     // Hero Section
-    'hero.title': 'XMRT Economy',
+    'hero.title': 'ElizaOS, by XMRT Solutions',
     'hero.subtitle': 'Mobile Mining Democracy • AI-Human Collaboration • Privacy as a Fundamental Right',
     'hero.tag.smartphone': '📱 Smartphone Mining',
     'hero.tag.ai': '🤖 Autonomous AI',
@@ -185,7 +185,7 @@ const translations = {
   },
   es: {
     // Hero Section
-    'hero.title': 'Economía XMRT',
+    'hero.title': 'ElizaOS, por XMRT Solutions',
     'hero.subtitle': 'Democracia de Minería Móvil • Colaboración IA-Humano • Privacidad como Derecho Fundamental',
     'hero.tag.smartphone': '📱 Minería Móvil',
     'hero.tag.ai': '🤖 IA Autónoma',

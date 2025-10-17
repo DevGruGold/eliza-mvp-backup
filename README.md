@@ -1,4 +1,4 @@
-# XMRT Economy: Mobile Mining Democracy & AI-Powered DAO Governance
+# ElizaOS, by XMRT Solutions: Mobile Mining Democracy & AI-Powered DAO Governance
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://xmrt.lovable.app)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
