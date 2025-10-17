@@ -19,9 +19,9 @@ serve(async (req) => {
   try {
     const { messages, conversationHistory, userContext, miningStats, systemVersion } = await req.json();
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY is not configured");
       throw new Error("AI service not configured");
     }
 
@@ -36,22 +36,22 @@ serve(async (req) => {
     // Build system prompt with full context
     const systemPrompt = buildSystemPrompt(conversationHistory, userContext, miningStats, systemVersion);
 
-    // Prepare messages for Gemini
+    // Prepare messages for OpenAI
     const geminiMessages = [
       { role: "system", content: systemPrompt },
       ...messages
     ];
 
-    console.log("📤 Calling Lovable AI Gateway with Gemini Flash...");
+    console.log("📤 Calling OpenAI GPT-4o-mini...");
     
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: geminiMessages,
         temperature: 0.9,
         max_tokens: 8000,
@@ -448,17 +448,17 @@ serve(async (req) => {
         });
         currentMessages.push(...toolResponseMessages);
         
-        console.log("📤 Sending tool results back to Gemini for analysis and next steps...");
+        console.log("📤 Sending tool results back to OpenAI for analysis and next steps...");
         
-        // Send updated messages back to Gemini
-        const followUpResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        // Send updated messages back to OpenAI
+        const followUpResponse = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
+            model: "gpt-4o-mini",
             messages: currentMessages,
             temperature: 0.9,
             max_tokens: 8000,
@@ -616,16 +616,16 @@ serve(async (req) => {
         
         // If we have successful tool results, use them to generate final response
         if (executedToolSignatures.size > 0) {
-          // Force one final response from Gemini without tool calling
+          // Force one final response from OpenAI without tool calling
           try {
-            const finalResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const finalResponse = await fetch("https://api.openai.com/v1/chat/completions", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                Authorization: `Bearer ${OPENAI_API_KEY}`,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-2.5-flash",
+                model: "gpt-4o-mini",
                 messages: [
                   ...currentMessages,
                   { 
@@ -939,14 +939,14 @@ Please analyze the error and fix the code. CRITICAL RULES:
 - Include proper error handling
 `;
 
-            const fixResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const fixResponse = await fetch("https://api.openai.com/v1/chat/completions", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${lovableApiKey}`,
+                Authorization: `Bearer ${OPENAI_API_KEY}`,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-2.5-flash",
+                model: "gpt-4o-mini",
                 messages: [
                   ...conversationHistory,
                   { role: "user", content: fixPrompt }
