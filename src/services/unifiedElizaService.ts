@@ -451,21 +451,77 @@ export class UnifiedElizaService {
             hasToolCalls: false
           };
         }
-        console.warn('⚠️ Tier 4 failed:', {
-          error: error?.message || data?.error,
-          willFallbackToTier5: true
-        });
-      } else {
-        console.log('⚠️ Tier 4 skipped: No OpenAI API key configured');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.warn('⚠️ Tier 4 exception:', {
         message: err.message,
         willFallbackToTier5: true
       });
     }
 
-    // Tier 5: Use embedded knowledge base with enhanced context awareness
+    // Tier 5: EMBEDDED GEMINI SDK - Direct client-side fallback
+    try {
+      console.log('🔮 Tier 5: Trying embedded Gemini SDK (client-side)...');
+      const { geminiDirectService } = await import('./geminiDirectService');
+      
+      const isAvailable = await geminiDirectService.isAvailable();
+      if (isAvailable) {
+        const response = await geminiDirectService.generateResponse(userInput, {
+          userContext,
+          miningStats,
+          conversationHistory,
+          systemVersion
+        });
+
+        if (response) {
+          console.log('✅ Embedded Gemini SDK response received');
+          return {
+            response,
+            hasToolCalls: false
+          };
+        }
+      } else {
+        console.warn('⚠️ Embedded Gemini SDK not available - no API key');
+      }
+    } catch (err) {
+      console.warn('⚠️ Tier 5 (Gemini SDK) exception:', {
+        message: err.message,
+        willFallbackToTier6: true
+      });
+    }
+
+    // Tier 6: Enhanced Fallback AI (Local HuggingFace models as last resort)
+    console.log('🎯 Tier 6: Trying Enhanced Fallback AI (Local AI models)...');
+    try {
+      const { FallbackAIService } = await import('./fallbackAIService');
+      
+      const aiResponse = await FallbackAIService.generateResponse(userInput, {
+        miningStats,
+        userContext
+      });
+      
+      if (aiResponse && aiResponse.text) {
+        console.log(`✅ Local AI response generated using ${aiResponse.method}`);
+        console.log(`🎯 Confidence: ${(aiResponse.confidence * 100).toFixed(1)}%`);
+        return {
+          response: aiResponse.text,
+          hasToolCalls: false
+        };
+      }
+    } catch (err) {
+      console.error('❌ Tier 6 (Local AI) failed:', err.message);
+    }
+
+    // ALL AI TIERS FAILED - This should be extremely rare
+    console.error('❌ CRITICAL: All AI tiers exhausted (Tiers 1-6)');
+    throw new Error('All AI services are currently unavailable. Please add a Gemini API key or try again later.');
+  }
+
+  // Continue with old fallback code for backwards compatibility
+  private static async oldKnowledgeBaseFallback(userInput: string, xmrtContext: any, contextData: any): Promise<{ response: string; hasToolCalls: boolean }> {
+    const { webIntelligence, multiStepResults, miningStats, systemVersion } = contextData;
+
+    // Tier 7: Use embedded knowledge base with enhanced context awareness
     console.log('🎯 Tier 5: Using embedded knowledge fallback with intelligent analysis...');
     
     // Analyze what the user is asking for
@@ -515,18 +571,15 @@ export class UnifiedElizaService {
       contextualResponse += '\n';
     }
     
-    // Add conversational context if available
-    if (fullConversationContext?.recentMessages?.length > 0) {
-      const recentTopics = fullConversationContext.recentMessages
-        .slice(-3)
-        .map(m => m.content)
-        .join(' ');
-      
-      // If response is still empty, provide context-aware fallback
-      if (!contextualResponse.trim()) {
-        contextualResponse = `Based on our conversation, I understand you're asking about "${userInput}". `;
-        contextualResponse += `While my advanced AI features are temporarily unavailable, I can still help with information about the XMRT ecosystem.\n\n`;
-      }
+    // Add conversational context if available (removed - not in scope)
+    
+    // Add web intelligence if available
+    if (webIntelligence) {
+      contextualResponse += `🌐 **Web Intelligence**:\n${webIntelligence}\n\n`;
+    }
+    
+    if (multiStepResults) {
+      contextualResponse += `🔍 **Analysis Results**:\n${multiStepResults}\n\n`;
     }
     
     // Final fallback if still no response
@@ -539,8 +592,7 @@ export class UnifiedElizaService {
     console.log('✅ Intelligent fallback response generated with context:', {
       hasKnowledge: relevantKnowledge.length > 0,
       hasMiningStats: !!miningStats,
-      hasSystemVersion: !!systemVersion,
-      hasConversationContext: !!fullConversationContext?.recentMessages?.length
+      hasSystemVersion: !!systemVersion
     });
     
     return {
