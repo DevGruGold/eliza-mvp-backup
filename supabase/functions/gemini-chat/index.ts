@@ -21,25 +21,15 @@ serve(async (req) => {
 
     console.log("🤖 Gemini Chat - Processing request");
 
-    // Build concise system prompt (keep under 1000 chars)
-    let systemPrompt = `You are Eliza, AI assistant for XMRT-DAO. Be conversational and helpful.`;
-    
-    // Add only essential context
-    if (conversationHistory?.summaries?.length > 0) {
-      const latest = conversationHistory.summaries[conversationHistory.summaries.length - 1];
-      systemPrompt += `\n📚 Context: ${latest.summaryText.substring(0, 150)}`;
-    }
-    
-    if (miningStats?.isOnline) {
-      systemPrompt += `\n⛏️ Mining: ${miningStats.hashRate} H/s, ${miningStats.validShares} shares`;
-    }
-    
-    if (userContext?.isFounder) {
-      systemPrompt += `\n👤 User: Founder`;
-    }
+    // Ultra-minimal system prompt
+    const systemPrompt = `You are Eliza, AI assistant for XMRT-DAO.`;
 
-    // Prepare messages - only send last 10 messages to keep payload small
-    const recentMessages = messages.slice(-10);
+    // Only send last 3 messages, strip to minimal format
+    const recentMessages = messages.slice(-3).map((msg: any) => ({
+      role: msg.role,
+      content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+    }));
+    
     const geminiMessages = [
       { role: "system", content: systemPrompt },
       ...recentMessages

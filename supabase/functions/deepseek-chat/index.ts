@@ -21,34 +21,17 @@ serve(async (req) => {
       throw new Error('AI service not configured');
     }
 
-    console.log('🤖 Deepseek Chat - Processing request with context:', {
-      messagesCount: messages?.length,
-      hasHistory: !!conversationHistory,
-      hasMiningStats: !!miningStats,
-      hasSystemVersion: !!systemVersion,
-      userContext: userContext
-    });
+    console.log('🤖 Deepseek Chat - Processing request');
 
-    // Build concise system prompt (keep it under 1000 chars to avoid gateway limits)
-    let systemPrompt = `You are Eliza, an AI assistant for XMRT-DAO. Be conversational and helpful.`;
+    // Ultra-minimal system prompt
+    const systemPrompt = `You are Eliza, an AI assistant for XMRT-DAO.`;
 
-    // Add only essential context
-    if (miningStats && miningStats.isOnline) {
-      systemPrompt += `\n⛏️ Mining: ${miningStats.hashRate} H/s, ${miningStats.validShares} shares`;
-    }
-
-    if (userContext?.isFounder) {
-      systemPrompt += `\n👤 User: Founder`;
-    }
-
-    // Add only the most recent conversation summary (limit to 1)
-    if (conversationHistory?.summaries?.length > 0) {
-      const latestSummary = conversationHistory.summaries[conversationHistory.summaries.length - 1];
-      systemPrompt += `\n📜 Context: ${latestSummary.summaryText.substring(0, 200)}`;
-    }
-
-    // Prepare messages for Deepseek - only send last 10 messages to keep payload small
-    const recentMessages = messages.slice(-10);
+    // Only send last 3 messages, strip to minimal format
+    const recentMessages = messages.slice(-3).map((msg: any) => ({
+      role: msg.role,
+      content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+    }));
+    
     const deepseekMessages = [
       { role: 'system', content: systemPrompt },
       ...recentMessages
