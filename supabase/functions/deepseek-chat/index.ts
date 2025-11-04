@@ -47,10 +47,11 @@ serve(async (req) => {
       systemPrompt += `\n📜 Context: ${latestSummary.summaryText.substring(0, 200)}`;
     }
 
-    // Prepare messages for Deepseek
+    // Prepare messages for Deepseek - only send last 10 messages to keep payload small
+    const recentMessages = messages.slice(-10);
     const deepseekMessages = [
       { role: 'system', content: systemPrompt },
-      ...messages
+      ...recentMessages
     ];
 
     console.log('📤 Calling Lovable AI Gateway (DeepSeek model)...');

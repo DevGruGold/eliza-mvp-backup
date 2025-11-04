@@ -38,10 +38,11 @@ serve(async (req) => {
       systemPrompt += `\n👤 User: Founder`;
     }
 
-    // Prepare messages
+    // Prepare messages - only send last 10 messages to keep payload small
+    const recentMessages = messages.slice(-10);
     const geminiMessages = [
       { role: "system", content: systemPrompt },
-      ...messages
+      ...recentMessages
     ];
 
     console.log("📤 Calling Lovable AI Gateway (Gemini)...");
