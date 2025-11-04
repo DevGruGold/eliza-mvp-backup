@@ -35,10 +35,10 @@ serve(async (req) => {
     console.log('📋 Original code:', execution.code);
     console.log('❌ Error:', execution.error);
 
-    // Use OpenAI to analyze and fix the code
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OPENAI_API_KEY not configured');
+    // Use Lovable AI Gateway to analyze and fix the code
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     const fixPrompt = `PYTHON CODE FIXER - STANDARD LIBRARY ONLY
@@ -79,18 +79,18 @@ with urllib.request.urlopen(req) as response:
     print(data)
 `;
 
-    console.log('🤖 Calling OpenAI for code fix...');
+    console.log('🤖 Calling Lovable AI Gateway for code fix...');
 
     const aiResponse = await fetch(
-      'https://api.openai.com/v1/chat/completions',
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
+          'Authorization': `Bearer ${lovableApiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'google/gemini-2.5-flash',
           messages: [
             {
               role: 'system',

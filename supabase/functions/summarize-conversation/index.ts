@@ -14,10 +14,10 @@ serve(async (req) => {
 
   try {
     const { session_id, messages } = await req.json();
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
-    if (!openaiApiKey) {
-      console.error('OpenAI API key not configured');
+    if (!lovableApiKey) {
+      console.error('Lovable API key not configured');
       return new Response(JSON.stringify({ error: 'API key not configured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -31,15 +31,15 @@ serve(async (req) => {
       `${msg.message_type}: ${msg.content}`
     ).join('\n');
 
-    // Generate summary using OpenAI
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Generate summary using Lovable AI Gateway
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -52,6 +52,25 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
+      
+      // Handle rate limiting
+      if (response.status === 429) {
+        console.error('⏸️ Lovable AI rate limit exceeded');
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded, please try again later' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // Handle payment required
+      if (response.status === 402) {
+        console.error('💳 Lovable AI payment required');
+        return new Response(JSON.stringify({ error: 'Payment required, please add credits to your workspace' }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       console.error('AI Gateway error:', errorText);
       throw new Error(`AI Gateway error: ${errorText}`);
     }

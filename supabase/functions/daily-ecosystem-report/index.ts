@@ -178,19 +178,19 @@ Create a detailed, engaging report that:
 
 Format the report in Markdown with clear sections and headers. Be conversational but professional. Show that you understand the context and are actively managing the ecosystem.`;
 
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OPENAI_API_KEY not configured');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-pro',
         messages: [
           { role: 'system', content: 'You are Eliza, the autonomous manager of XMRT-DAO. You are intelligent, proactive, caring, and deeply engaged with the ecosystem.' },
           { role: 'user', content: aiPrompt }
@@ -201,6 +201,31 @@ Format the report in Markdown with clear sections and headers. Be conversational
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
+      
+      // Handle rate limiting
+      if (aiResponse.status === 429) {
+        console.error('⏸️ Lovable AI rate limit exceeded');
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'Rate limit exceeded, report generation skipped' 
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // Handle payment required
+      if (aiResponse.status === 402) {
+        console.error('💳 Lovable AI payment required');
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'Payment required, report generation skipped' 
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       console.error('❌ AI generation failed:', errorText);
       throw new Error(`AI generation failed: ${aiResponse.status} ${errorText}`);
     }

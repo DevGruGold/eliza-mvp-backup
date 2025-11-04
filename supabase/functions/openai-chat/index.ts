@@ -13,29 +13,29 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, model = "gpt-4", temperature = 0.9, max_tokens = 8000 } = await req.json();
+    const { messages, model = "openai/gpt-5-mini", temperature = 0.9, max_tokens = 8000 } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error('Messages array is required');
     }
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OPENAI_API_KEY not configured');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    console.log('🤖 OpenAI Chat - Processing request:', {
+    console.log('🤖 Lovable AI Chat - Processing request:', {
       messageCount: messages.length,
       model,
       temperature,
       max_tokens
     });
 
-    // Call OpenAI Chat Completions API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Lovable AI Gateway
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -48,9 +48,33 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
+      // Handle rate limiting
+      if (response.status === 429) {
+        console.error('⏸️ Lovable AI rate limit exceeded');
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'Rate limit exceeded, please try again later' 
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // Handle payment required
+      if (response.status === 402) {
+        console.error('💳 Lovable AI payment required');
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'Payment required, please add credits to your workspace' 
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       const errorData = await response.json();
-      console.error('❌ OpenAI API error:', errorData);
-      throw new Error(errorData.error?.message || 'OpenAI API request failed');
+      console.error('❌ Lovable AI Gateway error:', errorData);
+      throw new Error(errorData.error?.message || 'AI Gateway request failed');
     }
 
     const data = await response.json();
