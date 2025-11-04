@@ -15,9 +15,9 @@ serve(async (req) => {
   try {
     const { messages, conversationHistory, userContext, miningStats, systemVersion } = await req.json();
     
-    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
-    if (!DEEPSEEK_API_KEY) {
-      console.error('DEEPSEEK_API_KEY is not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY is not configured');
       throw new Error('AI service not configured');
     }
 
@@ -111,32 +111,30 @@ CRITICAL INSTRUCTIONS:
       ...messages
     ];
 
-    console.log('📤 Calling Deepseek API...');
+    console.log('📤 Calling Lovable AI Gateway (DeepSeek model)...');
     
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'google/gemini-2.5-flash',
         messages: deepseekMessages,
-        temperature: 0.9,
-        max_tokens: 8000,
         stream: false
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Deepseek API error:', response.status, errorText);
+      console.error('Lovable AI Gateway error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: 'Rate limit exceeded. Please try again in a moment.' 
+            error: 'Lovable AI rate limit exceeded. Please try again in a moment.' 
           }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -146,19 +144,19 @@ CRITICAL INSTRUCTIONS:
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: 'API credits depleted. Please check your Deepseek account.' 
+            error: 'Lovable AI credits exhausted. Please add credits at Settings → Workspace → Usage.' 
           }),
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      throw new Error(`Deepseek API error: ${response.status}`);
+      throw new Error(`Lovable AI Gateway error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
     const message = data.choices?.[0]?.message;
 
-    console.log('✅ Deepseek response:', { 
+    console.log('✅ Lovable AI Gateway response:', { 
       hasContent: !!message?.content,
       usage: data.usage
     });

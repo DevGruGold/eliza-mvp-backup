@@ -19,9 +19,9 @@ serve(async (req) => {
   try {
     const { messages, conversationHistory, userContext, miningStats, systemVersion } = await req.json();
     
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY is not configured");
       throw new Error("AI service not configured");
     }
 
@@ -42,19 +42,17 @@ serve(async (req) => {
       ...messages
     ];
 
-    console.log("📤 Calling OpenAI GPT-4o-mini...");
+    console.log("📤 Calling Lovable AI Gateway (Gemini)...");
     
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "google/gemini-2.5-pro",
         messages: geminiMessages,
-        temperature: 0.9,
-        max_tokens: 8000,
         tools: [
           {
             type: 'function',
@@ -410,7 +408,7 @@ serve(async (req) => {
         const toolResults = await executeToolCallsWithRetry(
           currentToolCalls,
           supabase,
-          OPENAI_API_KEY,
+          LOVABLE_API_KEY,
           conversationHistory
         );
         
@@ -448,20 +446,18 @@ serve(async (req) => {
         });
         currentMessages.push(...toolResponseMessages);
         
-        console.log("📤 Sending tool results back to OpenAI for analysis and next steps...");
+        console.log("📤 Sending tool results back to Lovable AI Gateway for analysis and next steps...");
         
-        // Send updated messages back to OpenAI
-        const followUpResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+        // Send updated messages back to Lovable AI Gateway
+        const followUpResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "google/gemini-2.5-pro",
             messages: currentMessages,
-            temperature: 0.9,
-            max_tokens: 8000,
             tools: [
               {
                 type: 'function',
@@ -616,16 +612,16 @@ serve(async (req) => {
         
         // If we have successful tool results, use them to generate final response
         if (executedToolSignatures.size > 0) {
-          // Force one final response from OpenAI without tool calling
+          // Force one final response from Lovable AI Gateway without tool calling
           try {
-            const finalResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+            const finalResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${OPENAI_API_KEY}`,
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "gpt-4o-mini",
+                model: "google/gemini-2.5-pro",
                 messages: [
                   ...currentMessages,
                   { 
@@ -645,10 +641,7 @@ Example BAD response: "I am currently retrieving..." or "Let me check..." or "I'
 
 Respond NOW using the data shown above.` 
                   }
-                ],
-                temperature: 0.7,
-                max_tokens: 1000,
-                tool_choice: 'none'
+                ]
               }),
             });
             
@@ -869,7 +862,7 @@ const executedToolSignatures = new Map<string, any>();
 async function executeToolCallsWithRetry(
   toolCalls: any[], 
   supabase: any, 
-  openaiApiKey: string,
+  lovableApiKey: string,
   conversationHistory: any[],
   maxRetries: number = 2
 ) {
@@ -939,20 +932,18 @@ Please analyze the error and fix the code. CRITICAL RULES:
 - Include proper error handling
 `;
 
-            const fixResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+            const fixResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${openaiApiKey}`,
+                Authorization: `Bearer ${lovableApiKey}`,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "gpt-4o-mini",
+                model: "google/gemini-2.5-flash",
                 messages: [
                   ...conversationHistory,
                   { role: "user", content: fixPrompt }
                 ],
-                temperature: 0.7,
-                max_tokens: 1500,
                 tools: [
                   {
                     type: 'function',
