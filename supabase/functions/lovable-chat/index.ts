@@ -15,13 +15,13 @@ serve(async (req) => {
   try {
     const { messages, conversationHistory, userContext, miningStats, systemVersion } = await req.json();
     
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      console.error('❌ OPENAI_API_KEY not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.error('❌ LOVABLE_API_KEY not configured');
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'OPENAI_API_KEY not configured' 
+          error: 'LOVABLE_API_KEY not configured' 
         }), 
         { 
           status: 500, 
@@ -196,14 +196,14 @@ You are currently running INSIDE a Supabase Edge Function called "lovable-chat".
 
     console.log('📤 Calling Lovable AI Gateway...');
     
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const openaiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages
@@ -1151,16 +1151,45 @@ You are currently running INSIDE a Supabase Edge Function called "lovable-chat".
 
     if (!openaiResponse.ok) {
       const errorText = await openaiResponse.text();
-      console.error('❌ OpenAI error:', {
+      console.error('❌ Lovable AI Gateway error:', {
         status: openaiResponse.status,
         statusText: openaiResponse.statusText,
         error: errorText
       });
       
+      // Handle rate limiting and payment errors specifically
+      if (openaiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Lovable AI rate limit exceeded. Please try again in a few moments.',
+            code: 'RATE_LIMIT_EXCEEDED'
+          }), 
+          { 
+            status: 429, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
+      if (openaiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Lovable AI credits exhausted. Please add credits to your workspace at Settings → Workspace → Usage.',
+            code: 'PAYMENT_REQUIRED'
+          }), 
+          { 
+            status: 402, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: `OpenAI error: ${openaiResponse.status} ${openaiResponse.statusText}`,
+          error: `Lovable AI Gateway error: ${openaiResponse.status} ${openaiResponse.statusText}`,
           details: errorText
         }), 
         { 
@@ -1171,7 +1200,7 @@ You are currently running INSIDE a Supabase Edge Function called "lovable-chat".
     }
 
     const openaiData = await openaiResponse.json();
-    console.log('✅ OpenAI response received');
+    console.log('✅ Lovable AI Gateway response received');
     
     // Check if the AI wants to use any tools
     const toolCalls = openaiData.choices?.[0]?.message?.tool_calls;
