@@ -19,16 +19,35 @@ serve(async (req) => {
       throw new Error("AI service not configured");
     }
 
-    console.log("🤖 Gemini Chat - Processing request");
+    console.log("🤖 Gemini Chat - Processing request with context:", {
+      messagesCount: messages?.length,
+      hasHistory: !!conversationHistory,
+      hasMiningStats: !!miningStats,
+      hasSystemVersion: !!systemVersion,
+      userContext: userContext
+    });
 
-    // Ultra-minimal system prompt
-    const systemPrompt = `You are Eliza, AI assistant for XMRT-DAO.`;
+    // Build context-rich system prompt
+    let systemPrompt = `You are Eliza, AI assistant for XMRT-DAO. Be conversational and helpful.`;
 
-    // Only send last 3 messages, strip to minimal format
-    const recentMessages = messages.slice(-3).map((msg: any) => ({
-      role: msg.role,
-      content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
-    }));
+    // Add mining stats context when available
+    if (miningStats && miningStats.isOnline) {
+      systemPrompt += `\n⛏️ Mining: ${miningStats.hashRate} H/s, ${miningStats.validShares} shares`;
+    }
+
+    // Include user context (founder status)
+    if (userContext?.isFounder) {
+      systemPrompt += `\n👤 User: Founder`;
+    }
+
+    // Add latest conversation summary (truncated to ~150 chars)
+    if (conversationHistory?.summaries?.length > 0) {
+      const latestSummary = conversationHistory.summaries[conversationHistory.summaries.length - 1];
+      systemPrompt += `\n📜 Context: ${latestSummary.summaryText.substring(0, 150)}`;
+    }
+
+    // Send last 10 messages with full structure
+    const recentMessages = messages.slice(-10);
     
     const geminiMessages = [
       { role: "system", content: systemPrompt },
