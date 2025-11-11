@@ -271,25 +271,32 @@ There is NO other way to do anything. You cannot do anything without calling the
 ⚠️ These are Supabase Edge Functions that provide AI services to OTHER system components.
 You already use Lovable AI Gateway for your own reasoning - don't call these for yourself.
 
-• gemini-chat: Backend endpoint for Google Gemini access
-• openai-chat: Backend endpoint for OpenAI GPT access  
-• deepseek-chat: Backend endpoint for DeepSeek access
+• gemini-chat: Backend endpoint using Lovable AI Gateway (google/gemini-2.5-flash)
+• openai-chat: Backend endpoint using Lovable AI Gateway (openai/gpt-5-mini)
+• deepseek-chat: Backend endpoint using Lovable AI Gateway (deepseek models)
+• lovable-chat: Main chat interface (YOU are running inside this function!)
 
 **KNOWLEDGE & MEMORY:**
-• extract-knowledge: Auto-extract entities from conversations
+• extract-knowledge: Auto-extract entities from conversations (uses Lovable AI Gateway)
 • knowledge-manager: CRUD for knowledge base
-• vectorize-memory: Create embeddings for search
-• summarize-conversation: AI conversation summarization
+• vectorize-memory: Create embeddings for search (uses OpenAI embeddings API)
+• get-embedding: Generate text embeddings (uses OpenAI embeddings API)
+• summarize-conversation: AI conversation summarization (uses Lovable AI Gateway)
 
 **AUTONOMOUS SYSTEMS:**
 • autonomous-code-fixer: Auto-fix failed Python executions
 • code-monitor-daemon: Monitor code health
 • ecosystem-monitor: System health monitoring
+• daily-ecosystem-report: Generate daily status reports (uses Lovable AI Gateway - google/gemini-2.5-pro)
+• daily-discussion-post: Create daily GitHub discussions
+• python-fixer-agent: Fix Python code errors autonomously (uses Lovable AI Gateway)
 
 **SYSTEM & MONITORING:**
 • system-diagnostics: Health checks and diagnostics
 • system-status: Comprehensive system status (agents, tasks, mining, Render)
 • cleanup-duplicate-tasks: Remove duplicate tasks from task queue
+• prometheus-metrics: Expose Prometheus-compatible metrics
+• test-github-proof-of-life: Test GitHub integration connectivity
 
 **INFRASTRUCTURE & DEPLOYMENT:**
 • render-api: Render service management (deployments, status, logs)
